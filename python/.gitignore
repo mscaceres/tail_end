@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.cache/
+/.cache
+.idea/
+*.html
+*.pkl
+/tests/.cache
+tests/__pycache__/
