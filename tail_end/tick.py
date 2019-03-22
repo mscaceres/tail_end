@@ -10,28 +10,7 @@ class Color(Enum):
     CYAN = 96
 
 
-class Tick:
-    def __init__(self, char):
-        self.char = char
-
-    def __str__(self):
-        return self.char
-
-    # Agregar validaciones a todos estos metodos
-    def __mul__(self, value):
-        return self.__class__(self.char * value)
-
-    def __getitem__(self, index):
-        return self.__class__(self.char[index])
-
-    def __add__(self, other):
-        return self.__class__(self.char + other)
-
-    def __len__(self):
-        return len(self.char)
-
-
-class ColorTick(Tick):
+class ColorTick(str):
     AVAILABLE_COLORS = {}
     CURRENT = None
     _START = None
@@ -51,17 +30,28 @@ class ColorTick(Tick):
     def __str__(self):
         return self._START + super().__str__() + self._END
 
-
     def __add__(self, other):
-        if other.CURRENT == self.CURRENT:
-            # same color, maybe different char
+        if isinstance(other, self.__class__.__bases__):
+            if self == other:
+                return self.__class__(super().__add__(other))
+            else:
+                return MixedColor(self, other)
+        elif isinstance(other, str):
             return super().__add__(other)
         else:
-            return MixedColor(self, other)
+            raise TypeError('Invalid type for %s' % other)
 
     def __format__(self, format_spec):
-        import pdb;pdb.set_trace()
-        return format_spec.format(str(self))
+        return format(str(self), format_spec)
+
+    def __mul__(self, value):
+        return self.__class__(super().__mul__(value))
+
+    def __getitem__(self, index):
+        return self.__class__(super().__getitem__(index))
+
+    def __eq__(self, other):
+        return self.CURRENT == other.CURRENT and super().__eq__(other)
 
 
 class MixedColor():
@@ -69,10 +59,15 @@ class MixedColor():
     def __init__(self, *tick_colors):
         self.tick_colors = tick_colors
 
+    def __str__(self):
+        return "".join(str(tick_color) for tick_color in self.tick_colors)
+
+    def __format__(self, format_spec):
+        return format(str(self), format_spec)
 
 
 # create a subclass of ColorTrick per color defined
 globals().update((tick_color.name+'Tick',
-                  type(tick_color.name+'Tick', (ColorTick,), {'CURRENT':tick_color,
-                                                              '_START': f'\33[{tick_color.value}m'}))
+                  type(tick_color.name+'Tick',
+                       (ColorTick,), {'CURRENT':tick_color, '_START': f'\33[{tick_color.value}m'}))
                  for tick_color in Color)

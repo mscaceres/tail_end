@@ -15,6 +15,8 @@ import sys
 from docopt import docopt
 from collections import namedtuple
 import shutil
+from tick import ColorTick
+
 
 TERM_COLUMNS, _ = shutil.get_terminal_size()
 
@@ -67,6 +69,12 @@ def tail_end(time_doing, time_total, times, unit):
 class Printer(object):
 
     def __init__(self, lenght, used_tick, free_tick):
+        """
+        tick stand for a unit of time
+        lenght: amount of character to print per line
+        used_tick: character to represent used tick
+        free_tick: character to represent remaining tick
+        """
         self.ticks_in_line = lenght
         self.used_tick = used_tick
         self.free_tick = free_tick
@@ -88,9 +96,15 @@ def main(args):
 
         chances = tail_end(time_doing=age, time_total=life, times=count, unit=unit)
 
+        red_tick = ColorTick.from_color_string("red", "#")
+        green_tick = ColorTick.from_color_string("green", "0")
+        p = Printer(10, used_tick=red_tick, free_tick=green_tick)
+
         print("you have {} {} out of {} {} more chances".format(chances.remaining, chances.unit, chances.total, chances.unit))
         print("you have consumed {}%".format(chances.wasted * 100 / chances.total))
         print("Remaining {}%".format(chances.remaining * 100 / chances.total))
+
+        p.print(chances.wasted, chances.remaining)
         return 0
     except ValueError as e:
         print(e, file=sys.stderr)
